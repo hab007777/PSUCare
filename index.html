@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PSU Care | Your Health. Your Future. (Prototype Website)</title>
+  <meta name="description" content="PSU Care is a front-end prototype of a health-plan website: explore sample plans, search fictional demonstration providers, browse wellness resources, community programs and FAQs.">
+  <meta name="theme-color" content="#168447">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23168447'/%3E%3Cpath d='M26 14h12v12h12v12H38v12H26V38H14V26h12z' fill='%23fff'/%3E%3C/svg%3E">
+
+  <style>
+    /* ===================================================================
+       1. DESIGN TOKENS
+       =================================================================== */
+    :root {
+      --green: #168447;
+      --green-dark: #105c32;
+      --green-light: #eaf6ee;
+      --green-mid: #cfe9d9;
+      --white: #ffffff;
+      --gray: #333333;
+      --gray-soft: #5b6470;
+      --line: #dbe5de;
+      --warn-bg: #fff8e1;
+      --warn-ink: #6b4e00;
+      --error: #b3261e;
+      --radius: 18px;
+      --radius-sm: 12px;
+      --shadow-sm: 0 2px 10px rgba(16,92,50,.08);
+      --shadow-md: 0 12px 30px rgba(16,92,50,.14);
+      --shadow-lg: 0 26px 60px rgba(16,92,50,.2);
+      --container: 1200px;
+      --header-h: 78px;
+      --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* ===================================================================
+       2. BASE
+       =================================================================== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 12px); -webkit-text-size-adjust: 100%; }
+    body { margin: 0; font-family: var(--font); color: var(--gray); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    img { max-width: 100%; display: block; }
+    a { color: var(--green-dark); }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    h1, h2, h3, h4 { color: var(--green-dark); line-height: 1.18; margin: 0 0 .5em; letter-spacing: -.015em; }
+    p { margin: 0 0 1em; }
+    :focus-visible { outline: 3px solid #0b57d0; outline-offset: 3px; border-radius: 6px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .skip-link { position: absolute; left: 12px; top: -64px; z-index: 3000; background: var(--green-dark); color: #fff; padding: 10px 18px; border-radius: 8px; text-decoration: none; transition: top .2s; }
+    .skip-link:focus { top: 12px; }
+    .container { width: min(100% - 40px, var(--container)); margin-inline: auto; }
+    section { padding: clamp(56px, 8vw, 100px) 0; }
+    .alt { background: var(--green-light); }
+    .eyebrow { display: inline-block; font-size: .8rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
+    .section-head { max-width: 720px; margin-bottom: 40px; }
+    .section-head.center { text-align: center; margin-inline: auto; }
+    .section-head h2 { font-size: clamp(1.8rem, 4vw, 2.7rem); }
+    .section-head p { color: var(--gray-soft); font-size: 1.08rem; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 26px; border-radius: 999px; font-weight: 700; text-decoration: none; transition: transform .15s, background .2s, color .2s, box-shadow .2s; white-space: nowrap; border: 2px solid transparent; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--green); color: #fff; box-shadow: 0 8px 20px rgba(22,132,71,.28); }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-white { background: #fff; color: var(--green-dark); }
+    .btn-white:hover { background: var(--green-light); }
+    .btn-outline { border-color: currentColor; color: var(--green-dark); background: transparent; }
+    .btn-outline:hover { background: var(--green-light); }
+    .btn-sm { padding: 9px 18px; font-size: .9rem; }
+
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* Prototype notice */
+    .proto-bar { background: var(--warn-bg); color: var(--warn-ink); font-size: .85rem; text-align: center; padding: 8px 16px; border-bottom: 1px solid #f0dc9a; }
+    .proto-bar strong { font-weight: 700; }
+    .demo-badge { display: inline-block; background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #f0dc9a; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
+
+    /* ===================================================================
+       3. LOGO + HEADER
+       =================================================================== */
+    .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--green); display: grid; place-items: center; position: relative; flex: none; }
+    .logo-icon::before, .logo-icon::after { content: ""; position: absolute; background: #fff; border-radius: 3px; }
+    .logo-icon::before { width: 8px; height: 24px; }
+    .logo-icon::after { width: 24px; height: 8px; }
+    .logo-text { font-size: 1.6rem; font-weight: 800; letter-spacing: -.03em; color: var(--green-dark); line-height: 1; }
+    .logo-text b { color: var(--green); font-weight: 800; }
+    .logo-text small { display: block; font-size: .6rem; letter-spacing: .24em; text-transform: uppercase; color: var(--gray-soft); font-weight: 700; margin-top: 3px; }
+
+    .site-header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,.97); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); transition: box-shadow .2s; }
+    .site-header.scrolled { box-shadow: var(--shadow-sm); }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: var(--header-h); }
+    .primary-nav ul { display: flex; align-items: center; gap: 2px; }
+    .nav-link { display: block; padding: 9px 12px; border-radius: 999px; font-weight: 600; font-size: .94rem; color: var(--gray); text-decoration: none; transition: background .2s, color .2s; }
+    .nav-link:hover, .nav-link.active { background: var(--green-light); color: var(--green-dark); }
+    .menu-toggle { display: none; width: 48px; height: 48px; border-radius: 12px; border: 2px solid var(--line); align-items: center; justify-content: center; }
+    .bars { width: 22px; height: 16px; position: relative; display: block; }
+    .bars span { position: absolute; left: 0; width: 100%; height: 2.5px; background: var(--green-dark); border-radius: 2px; transition: transform .25s, opacity .2s, top .25s; }
+    .bars span:nth-child(1) { top: 0; } .bars span:nth-child(2) { top: 7px; } .bars span:nth-child(3) { top: 14px; }
+    .menu-toggle[aria-expanded="true"] .bars span:nth-child(1) { top: 7px; transform: rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .bars span:nth-child(2) { opacity: 0; }
+    .menu-toggle[aria-expanded="true"] .bars span:nth-child(3) { top: 7px; transform: rotate(-45deg); }
+    .nav-cta-mobile { display: none; }
+
+    /* ===================================================================
+       4. HERO
+       =================================================================== */
+    .hero { position: relative; padding: clamp(48px, 7vw, 96px) 0 clamp(70px, 9vw, 120px); background: linear-gradient(135deg, var(--green-light) 0%, #fff 60%); overflow: hidden; }
+    .hero::before { content: ""; position: absolute; right: -180px; top: -180px; width: 560px; height: 560px; border-radius: 50%; background: var(--green-mid); opacity: .55; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
+    .hero h1 { font-size: clamp(2.4rem, 5.6vw, 4.2rem); letter-spacing: -.035em; margin-bottom: 18px; }
+    .hero h1 span { color: var(--green); display: block; }
+    .hero .lead { font-size: clamp(1.05rem, 1.8vw, 1.25rem); color: var(--gray-soft); max-width: 540px; margin-bottom: 30px; }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-points { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 34px; font-weight: 600; font-size: .95rem; color: var(--green-dark); }
+    .hero-points li { display: flex; align-items: center; gap: 8px; }
+    .hero-points svg { width: 20px; height: 20px; color: var(--green); flex: none; }
+    .hero-media { position: relative; }
+    .hero-photo { border-radius: 28px 28px 120px 28px; aspect-ratio: 5/5.2; width: 100%; object-fit: cover; background: linear-gradient(135deg, var(--green), var(--green-dark)); box-shadow: var(--shadow-lg); }
+    .hero-card { position: absolute; left: -24px; bottom: 36px; background: #fff; border-radius: 16px; padding: 16px 20px; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 14px; max-width: 280px; }
+    .hero-card .ico { width: 46px; height: 46px; border-radius: 12px; background: var(--green-light); color: var(--green); display: grid; place-items: center; flex: none; }
+    .hero-card .ico svg { width: 24px; height: 24px; }
+    .hero-card strong { display: block; color: var(--green-dark); line-height: 1.2; }
+    .hero-card span { font-size: .84rem; color: var(--gray-soft); }
+
+    /* Icon boxes */
+    .icon-box { width: 56px; height: 56px; border-radius: 16px; background: var(--green-light); color: var(--green); display: grid; place-items: center; margin-bottom: 18px; transition: background .2s, color .2s; }
+    .icon-box svg { width: 28px; height: 28px; }
+
+    /* ===================================================================
+       5. HEALTH PLANS
+       =================================================================== */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; display: flex; flex-direction: column; box-shadow: var(--shadow-sm); transition: transform .25s, box-shadow .25s, border-color .25s; }
+    .card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--green-mid); }
+    .card:hover .icon-box { background: var(--green); color: #fff; }
+    .card h3 { font-size: 1.25rem; }
+    .card p { color: var(--gray-soft); font-size: .96rem; flex: 1; }
+    .plan-note { display: block; font-size: .78rem; color: var(--warn-ink); background: var(--warn-bg); border-radius: 8px; padding: 6px 10px; margin-bottom: 16px; }
+    .disclaimer { margin-top: 30px; padding: 16px 20px; border-left: 5px solid #e0b100; background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; font-size: .92rem; }
+
+    /* ===================================================================
+       6. MEMBER RESOURCES
+       =================================================================== */
+    .res-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+    .res-tile { background: #fff; border-radius: var(--radius); padding: 24px 20px; border: 1px solid var(--line); text-align: left; width: 100%; transition: transform .2s, box-shadow .2s, border-color .2s; }
+    .res-tile:hover, .res-tile[aria-selected="true"] { border-color: var(--green); box-shadow: var(--shadow-md); transform: translateY(-4px); }
+    .res-tile[aria-selected="true"] { background: var(--green); color: #fff; }
+    .res-tile[aria-selected="true"] .icon-box { background: #fff; color: var(--green); }
+    .res-tile[aria-selected="true"] h3, .res-tile[aria-selected="true"] p { color: #fff; }
+    .res-tile h3 { font-size: 1.05rem; margin-bottom: 4px; }
+    .res-tile p { font-size: .85rem; color: var(--gray-soft); margin: 0; }
+    .res-tile .icon-box { width: 48px; height: 48px; margin-bottom: 14px; }
+    .res-panel { margin-top: 26px; background: #fff; border-radius: var(--radius); border: 1px solid var(--line); padding: clamp(22px, 3vw, 36px); box-shadow: var(--shadow-sm); min-height: 220px; }
+    .res-panel h3 { font-size: 1.4rem; }
+    .res-panel ul.check { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 24px; margin: 16px 0; }
+    .check li { display: flex; gap: 10px; align-items: flex-start; }
+    .check li::before { content: ""; flex: none; width: 20px; height: 20px; margin-top: 3px; border-radius: 50%; background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6 12.500 4 4 8-9' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat; }
+    .doc-list { display: grid; gap: 10px; margin: 16px 0; }
+    .doc-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--green-light); flex-wrap: wrap; }
+    .doc-list span.name { font-weight: 600; color: var(--green-dark); }
+
+    /* ===================================================================
+       7. FIND A DOCTOR
+       =================================================================== */
+    .search-panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-md); display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 14px; align-items: end; margin-bottom: 14px; }
+    .field label { display: block; font-weight: 600; font-size: .86rem; margin-bottom: 6px; color: var(--green-dark); }
+    .field input, .field select, .field textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--line); border-radius: var(--radius-sm); background: #fff; transition: border-color .2s, box-shadow .2s; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px var(--green-light); }
+    .field textarea { min-height: 140px; resize: vertical; }
+    .field [aria-invalid="true"] { border-color: var(--error); }
+    .field .err { color: var(--error); font-size: .84rem; min-height: 1.2em; margin-top: 4px; font-weight: 600; }
+    .result-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 22px 0 16px; }
+    .result-bar p { margin: 0; font-weight: 700; color: var(--green-dark); }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+    .doc-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); transition: transform .25s, box-shadow .25s; display: flex; flex-direction: column; }
+    .doc-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+    .doc-top { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+    .avatar { width: 58px; height: 58px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 1.2rem; flex: none; }
+    .doc-top h3 { margin: 0; font-size: 1.1rem; }
+    .doc-top span.spec { color: var(--green); font-weight: 600; font-size: .9rem; }
+    .doc-card dl { margin: 0 0 14px; display: grid; gap: 6px; font-size: .9rem; color: var(--gray-soft); flex: 1; }
+    .doc-card dl div { display: flex; gap: 8px; }
+    .doc-card dt { font-weight: 700; color: var(--gray); min-width: 76px; }
+    .doc-card dd { margin: 0; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .tag { font-size: .74rem; font-weight: 700; background: var(--green-light); color: var(--green-dark); padding: 3px 10px; border-radius: 999px; }
+    .no-results { grid-column: 1 / -1; text-align: center; padding: 44px 20px; background: #fff; border-radius: var(--radius); border: 2px dashed var(--green-mid); }
+
+    /* ===================================================================
+       8. BENEFITS
+       =================================================================== */
+    .benefit h3 { font-size: 1.15rem; }
+    .benefit .more { margin-top: 12px; font-weight: 700; font-size: .9rem; color: var(--green); text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+    .benefit .more:hover { text-decoration: underline; }
+    .benefit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+
+    /* ===================================================================
+       9. COMMUNITY
+       =================================================================== */
+    .banner { position: relative; border-radius: 28px; overflow: hidden; color: #fff; padding: clamp(32px, 5vw, 64px); background: linear-gradient(110deg, var(--green-dark) 0%, var(--green) 70%); display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: center; isolation: isolate; margin-bottom: 40px; }
+    .banner::after { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--banner-img, none) center/cover; opacity: .22; mix-blend-mode: luminosity; }
+    .banner h2, .banner h3 { color: #fff; }
+    .banner h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+    .banner p { opacity: .95; font-size: 1.05rem; }
+    .banner-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .banner-stats div { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); border-radius: 16px; padding: 18px; text-align: center; }
+    .banner-stats strong { display: block; font-size: 1.9rem; line-height: 1.1; }
+    .banner-stats span { font-size: .8rem; opacity: .92; }
+    .community-card .tag-row { margin-bottom: 12px; }
+
+    /* ===================================================================
+       10. NEWS
+       =================================================================== */
+    .news-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; transition: transform .25s, box-shadow .25s; }
+    .news-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+    .news-media { aspect-ratio: 16/10; background: linear-gradient(135deg, var(--green-mid), var(--green)); overflow: hidden; }
+    .news-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+    .news-card:hover .news-media img { transform: scale(1.05); }
+    .news-body { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+    .news-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: .8rem; margin-bottom: 10px; color: var(--gray-soft); }
+    .news-body h3 { font-size: 1.12rem; }
+    .news-body p { color: var(--gray-soft); font-size: .93rem; flex: 1; }
+    .event-list { margin-top: 36px; display: grid; gap: 12px; }
+    .event { display: grid; grid-template-columns: 76px 1fr auto; gap: 18px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 20px; }
+    .event .date { background: var(--green); color: #fff; border-radius: 14px; text-align: center; padding: 8px 4px; line-height: 1.1; }
+    .event .date b { display: block; font-size: 1.6rem; }
+    .event .date span { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; }
+    .event h3 { margin: 0 0 2px; font-size: 1.05rem; }
+    .event p { margin: 0; font-size: .9rem; color: var(--gray-soft); }
+
+    /* ===================================================================
+       11. FAQ
+       =================================================================== */
+    .faq-list { max-width: 840px; margin-inline: auto; display: grid; gap: 12px; }
+    .faq-item { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+    .faq-q { width: 100%; text-align: left; padding: 18px 22px; font-weight: 700; color: var(--green-dark); display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 1.02rem; }
+    .faq-q:hover { background: var(--green-light); }
+    .faq-q .plus { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--green-light); color: var(--green); display: grid; place-items: center; font-size: 1.4rem; line-height: 1; transition: transform .25s, background .2s, color .2s; }
+    .faq-q[aria-expanded="true"] .plus { transform: rotate(45deg); background: var(--green); color: #fff; }
+    .faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+    .faq-a > div { overflow: hidden; }
+    .faq-a p { padding: 0 22px 20px; margin: 0; color: var(--gray-soft); }
+    .faq-q[aria-expanded="true"] + .faq-a { grid-template-rows: 1fr; }
+
+    /* ===================================================================
+       12. CONTACT
+       =================================================================== */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; align-items: start; }
+    .contact-info li { display: flex; gap: 14px; margin-bottom: 18px; align-items: flex-start; }
+    .contact-info .icon-box { width: 48px; height: 48px; margin: 0; flex: none; }
+    .contact-info strong { display: block; color: var(--green-dark); }
+    .contact-info span { color: var(--gray-soft); font-size: .95rem; }
+    .form-card { background: #fff; border-radius: 24px; padding: clamp(24px, 4vw, 40px); border: 1px solid var(--line); box-shadow: var(--shadow-md); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-note { font-size: .85rem; color: var(--gray-soft); background: var(--green-light); border-radius: 10px; padding: 10px 14px; margin: 4px 0 16px; }
+    .alert { border-radius: 12px; padding: 14px 18px; font-weight: 600; margin-top: 16px; display: none; }
+    .alert.show { display: block; }
+    .alert.success { background: #e3f6e9; color: #0b5a2d; border: 1px solid #a9dcbb; }
+    .alert.error { background: #fdeceb; color: var(--error); border: 1px solid #f2b8b5; }
+
+    /* ===================================================================
+       13. FOOTER
+       =================================================================== */
+    .site-footer { background: var(--green-dark); color: #d6eadd; padding: 64px 0 28px; }
+    .site-footer a { color: #d6eadd; text-decoration: none; }
+    .site-footer a:hover { color: #fff; text-decoration: underline; }
+    .site-footer h4 { color: #fff; font-size: 1rem; margin-bottom: 14px; }
+    .site-footer li { margin-bottom: 9px; font-size: .95rem; }
+    .site-footer .logo-text, .site-footer .logo-text b { color: #fff; }
+    .site-footer .logo-text small { color: #a8d3b8; }
+    .site-footer .logo-icon { background: #fff; }
+    .site-footer .logo-icon::before, .site-footer .logo-icon::after { background: var(--green); }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1.2fr; gap: 40px; }
+    .footer-bottom { margin-top: 44px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.2); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; font-size: .86rem; }
+    .footer-bottom nav { display: flex; gap: 20px; flex-wrap: wrap; }
+    .footer-disclaimer { margin-top: 18px; font-size: .82rem; opacity: .9; max-width: 560px; }
+
+    .to-top { position: fixed; right: 20px; bottom: 20px; width: 48px; height: 48px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: opacity .3s, transform .2s; z-index: 900; }
+    .to-top.show { opacity: 1; pointer-events: auto; }
+    .to-top:hover { transform: translateY(-3px); background: var(--green-dark); }
+    .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 120px); background: var(--green-dark); color: #fff; padding: 14px 24px; border-radius: 999px; box-shadow: var(--shadow-lg); z-index: 3000; font-weight: 600; transition: transform .35s ease; max-width: calc(100% - 32px); text-align: center; }
+    .toast.show { transform: translate(-50%, 0); }
+
+    /* ===================================================================
+       14. RESPONSIVE
+       =================================================================== */
+    @media (max-width: 1180px) {
+      .nav-link { padding: 9px 9px; font-size: .88rem; }
+      .header-cta { display: none; }
+      .nav-cta-mobile { display: block; }
+    }
+    @media (max-width: 1024px) {
+      .hero-grid, .contact-grid, .banner { grid-template-columns: 1fr; }
+      .hero-media { max-width: 560px; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .res-grid { grid-template-columns: repeat(3, 1fr); }
+      .search-panel { grid-template-columns: 1fr 1fr; }
+      .search-panel .btn { grid-column: 1 / -1; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .benefit-grid, .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 960px) {
+      .menu-toggle { display: inline-flex; }
+      .primary-nav { position: fixed; top: var(--header-h); left: 0; right: 0; bottom: 0; background: #fff; padding: 18px 20px 40px; overflow-y: auto; transform: translateX(100%); visibility: hidden; transition: transform .3s ease, visibility .3s; }
+      .primary-nav.open { transform: none; visibility: visible; }
+      .primary-nav ul { flex-direction: column; align-items: stretch; gap: 4px; }
+      .nav-link { font-size: 1.15rem; padding: 16px; border-radius: 12px; border-bottom: 1px solid var(--line); }
+      .nav-cta-mobile { margin-top: 18px; }
+      .nav-cta-mobile .btn { width: 100%; }
+      .header-cta { display: none; }
+      body.menu-open { overflow: hidden; }
+    }
+    @media (max-width: 640px) {
+      .grid-4, .grid-3, .benefit-grid, .res-grid { grid-template-columns: 1fr; }
+      .search-panel, .form-grid, .footer-grid { grid-template-columns: 1fr; }
+      .event { grid-template-columns: 64px 1fr; }
+      .event .btn { grid-column: 1 / -1; }
+      .hero-card { left: 10px; right: 10px; max-width: none; }
+      .banner-stats { grid-template-columns: 1fr 1fr; }
+      .hero-cta .btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- SVG icon library (referenced via <use>) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5.200-8-11a4.500 4.500 0 0 1 8-2.800A4.500 4.500 0 0 1 20 10c0 5.800-8 11-8 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4 3.500-7 8-7s8 3 8 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.500" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.500 20c0-3.500 3-6 6.500-6s6.500 2.500 6.500 6M16 4.600a3.500 3.500 0 0 1 0 6.800M18 14.300c2.200.8 3.500 2.700 3.500 5.700" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.500 8 8 9 4.500-1 8-4 8-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8.500 12 2.500 2.500 4.500-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+      <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h7M9 17h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 .9-1 1.700M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-9 5-14 15-14 0 10-5 15-14 15M5 19c2-5 5-8 9-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s7-6.500 7-13a7 7 0 0 0-14 0c0 6.500 7 13 7 13z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.500" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="m3 7 9 7 9-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.500 1.500a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V4a3 3 0 0 0-3 0zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="i-apple" viewBox="0 0 24 24"><path d="M12 8c-2-2-7-1-7 5 0 4 3 8 5 8 1 0 1.500-.5 2-.5s1 .5 2 .5c2 0 5-4 5-8 0-6-5-7-7-5zM12 8c0-2 1-4 3-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-run" viewBox="0 0 24 24"><circle cx="14" cy="4.500" r="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10 21 2.500-5-3-3 2-5 4 2 3 1M8 10l-3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-stetho" viewBox="0 0 24 24"><path d="M6 3v6a4 4 0 0 0 8 0V3M10 13v2a5 5 0 0 0 10 0v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="11" r="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- ===== Prototype notice ===== -->
+  <div class="proto-bar" role="note"><strong>Prototype notice:</strong> This is a front-end demonstration website. All plans, providers, news, events and contact details are fictional samples.</div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <a href="#home" class="logo" aria-label="PSU Care home">
+        <span class="logo-icon" aria-hidden="true"></span>
+        <span class="logo-text">PSU <b>Care</b><small>Health &amp; Wellness</small></span>
+      </a>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="Main navigation">
+        <ul>
+          <li><a class="nav-link" href="#home">Home</a></li>
+          <li><a class="nav-link" href="#plans">Health Plans</a></li>
+          <li><a class="nav-link" href="#members">Members</a></li>
+          <li><a class="nav-link" href="#doctors">Find a Doctor</a></li>
+          <li><a class="nav-link" href="#benefits">Benefits</a></li>
+          <li><a class="nav-link" href="#resources">Resources</a></li>
+          <li><a class="nav-link" href="#about">About Us</a></li>
+          <li><a class="nav-link" href="#contact">Contact</a></li>
+          <li class="nav-cta-mobile"><a class="btn btn-primary" href="#plans">Explore Plans</a></li>
+        </ul>
+      </nav>
+
+      <a class="btn btn-primary header-cta" href="#plans">Explore Plans</a>
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+        <span class="bars" aria-hidden="true"><span></span><span></span><span></span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="home" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div>
+          <span class="eyebrow">Accessible &bull; Compassionate &bull; Community-minded</span>
+          <h1 id="hero-title">Your Health. Your Future. <span>PSU Care.</span></h1>
+          <p class="lead">We believe quality healthcare should feel welcoming and within reach. Explore our sample health-plan information, discover wellness resources and see how a modern member experience could look.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#plans">Explore Health Plans</a>
+            <a class="btn btn-outline" href="#doctors">Find a Doctor</a>
+          </div>
+          <ul class="hero-points">
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Plain-language information</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Designed for every screen</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Accessibility-minded</li>
+          </ul>
+        </div>
+        <div class="hero-media">
+          <!-- Replace the src below with your own image URL -->
+          <img class="hero-photo" id="hero-img" src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1000&q=75" alt="Smiling healthcare professional talking with a patient in a bright clinic" onerror="this.style.opacity='0'">
+          <div class="hero-card">
+            <span class="ico"><svg aria-hidden="true"><use href="#i-heart"/></svg></span>
+            <div><strong>Care that cares</strong><span>Sample tagline for demonstration</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== HEALTH PLANS ===== -->
+    <section id="plans" aria-labelledby="plans-title">
+      <div class="container">
+        <div class="section-head center reveal">
+          <span class="eyebrow">Health Plans</span>
+          <h2 id="plans-title">Explore plan categories</h2>
+          <p>Four sample categories show how plan information could be organized. They are not real insurance products.</p>
+        </div>
+        <div class="grid-4" id="plan-grid">
+          <article class="card reveal">
+            <span class="icon-box"><svg aria-hidden="true"><use href="#i-user"/></svg></span>
+            <span class="plan-note">Sample information only</span>
+            <h3>Individual &amp; Family Plans</h3>
+            <p>An example overview of how coverage options for individuals and households might be presented, with space for premiums, networks and enrollment dates.</p>
+            <button class="btn btn-primary btn-sm" type="button" data-learn="Individual &amp; Family Plans">Learn More</button>
+          </article>
+          <article class="card reveal">
+            <span class="icon-box"><svg aria-hidden="true"><use href="#i-users"/></svg></span>
+            <span class="plan-note">Sample information only</span>
+            <h3>Family Care</h3>
+            <p>A placeholder category highlighting family-focused services such as pediatric visits, parent resources and well-child checkups.</p>
+            <button class="btn btn-primary btn-sm" type="button" data-learn="Family Care">Learn More</button>
+          </article>
+          <article class="card reveal">
+            <span class="icon-box"><svg aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <span class="plan-note">Sample information only</span>
+            <h3>Preventive Care</h3>
+            <p>An example section emphasizing screenings, vaccinations and annual checkups that help people stay well before problems start.</p>
+            <button class="btn btn-primary btn-sm" type="button" data-learn="Preventive Care">Learn More</button>
+          </article>
+          <article class="card reveal">
+            <span class="icon-box"><svg aria-hidden="true"><use href="#i-globe"/></svg></span>
+            <span class="plan-note">Sample information only</span>
+            <h3>Community Health</h3>
+            <p>A sample category for neighborhood-based programs, health education and outreach connecting members with local support.</p>
+            <button class="btn btn-primary btn-sm" type="button" data-learn="Community Health">Learn More</button>
+          </article>
+        </div>
+        <p class="disclaimer" role="note"><strong>Important:</strong> PSU Care is a prototype. Nothing on this website describes real coverage, premiums, eligibility or enrollment. Replace this content with approved plan information before any real-world use.</p>
+      </div>
+    </section>
+
+    <!-- ===== MEMBER RESOURCES ===== -->
+    <section class="alt" id="members" aria-labelledby="members-title">
+      <div class="container">
+        <div class="section-head center reveal">
+          <span class="eyebrow">Members</span>
+          <h2 id="members-title">Member resources, all in one place</h2>
+          <p>Select a topic below to preview how member content could be organized.</p>
+        </div>
+        <div class="res-grid" role="tablist" aria-label="Member resource topics" id="res-tabs">
+          <button class="res-tile" role="tab" id="tab-benefits" aria-selected="true" aria-controls="res-panel" data-key="benefits"><span class="icon-box"><svg aria-hidden="true"><use href="#i-heart"/></svg></span><h3>Member Benefits</h3><p>Overview of sample perks</p></button>
+          <button class="res-tile" role="tab" id="tab-account" aria-selected="false" aria-controls="res-panel" data-key="account" tabindex="-1"><span class="icon-box"><svg aria-hidden="true"><use href="#i-user"/></svg></span><h3>Account Access</h3><p>Demo information only</p></button>
+          <button class="res-tile" role="tab" id="tab-forms" aria-selected="false" aria-controls="res-panel" data-key="forms" tabindex="-1"><span class="icon-box"><svg aria-hidden="true"><use href="#i-doc"/></svg></span><h3>Forms &amp; Documents</h3><p>Sample document list</p></button>
+          <button class="res-tile" role="tab" id="tab-faq" aria-selected="false" aria-controls="res-panel" data-key="faq" tabindex="-1"><span class="icon-box"><svg aria-hidden="true"><use href="#i-help"/></svg></span><h3>Common Questions</h3><p>Quick answers</p></button>
+          <button class="res-tile" role="tab" id="tab-wellness" aria-selected="false" aria-controls="res-panel" data-key="wellness" tabindex="-1"><span class="icon-box"><svg aria-hidden="true"><use href="#i-leaf"/></svg></span><h3>Health &amp; Wellness</h3><p>Everyday healthy living</p></button>
+        </div>
+        <div class="res-panel" id="res-panel" role="tabpanel" aria-labelledby="tab-benefits" tabindex="0"></div>
+      </div>
+    </section>
+
+    <!-- ===== FIND A DOCTOR ===== -->
+    <section id="doctors" aria-labelledby="doctors-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Find a Doctor</span>
+          <h2 id="doctors-title">Search providers <span class="demo-badge">Demonstration data</span></h2>
+          <p>Try the search below. Every provider shown is <strong>fictional</strong> and exists only to demonstrate how filtering works. No real provider, network or credential is represented.</p>
+        </div>
+
+        <form class="search-panel" id="doc-form" role="search" aria-label="Search for a provider (demonstration)">
+          <div class="field">
+            <label for="doc-q">Name, specialty or location</label>
+            <input type="search" id="doc-q" placeholder="e.g. &ldquo;Rivera&rdquo;, &ldquo;Pediatrics&rdquo;, &ldquo;Springfield&rdquo;" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="doc-spec">Specialty</label>
+            <select id="doc-spec"><option value="">All specialties</option></select>
+          </div>
+          <div class="field">
+            <label for="doc-loc">Location</label>
+            <select id="doc-loc"><option value="">All locations</option></select>
+          </div>
+          <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+
+        <div class="result-bar">
+          <p id="doc-count" aria-live="polite" role="status"></p>
+          <button class="btn btn-outline btn-sm" type="button" id="doc-reset">Reset filters</button>
+        </div>
+        <div class="doc-grid" id="doc-grid"></div>
+      </div>
+    </section>
+
+    <!-- ===== BENEFITS & WELLNESS ===== -->
+    <section class="alt" id="benefits" aria-labelledby="benefits-title">
+      <div class="container">
+        <div class="section-head center reveal">
+          <span class="eyebrow">Benefits &amp; Wellness</span>
+          <h2 id="benefits-title">Support for whole-person health</h2>
+          <p>General wellness topics shown as examples. Actual benefits depend on a real plan&rsquo;s official documents.</p>
+        </div>
+        <div class="benefit-grid">
+          <article class="card benefit reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-shield"/></svg></span><h3>Preventive Care</h3><p>Routine checkups, recommended screenings and immunizations help catch concerns early and keep families healthy.</p><button class="more" type="button" data-learn="Preventive Care resources">Explore topic &rarr;</button></article>
+          <article class="card benefit reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-run"/></svg></span><h3>Wellness Programs</h3><p>Sample programs for movement, nutrition and healthy habits that fit into busy everyday life.</p><button class="more" type="button" data-learn="Wellness Programs">Explore topic &rarr;</button></article>
+          <article class="card benefit reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-users"/></svg></span><h3>Family Health Resources</h3><p>Guides on children&rsquo;s wellness, caregiving, and planning healthy routines for every age in the household.</p><button class="more" type="button" data-learn="Family Health Resources">Explore topic &rarr;</button></article>
+          <article class="card benefit reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-brain"/></svg></span><h3>Mental Wellness</h3><p>Educational resources on stress, sleep and emotional well-being. If you are in crisis, contact local emergency services right away.</p><button class="more" type="button" data-learn="Mental Wellness resources">Explore topic &rarr;</button></article>
+          <article class="card benefit reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-apple"/></svg></span><h3>Healthy Living</h3><p>Everyday tips on balanced meals, staying active, and building small habits that add up over time.</p><button class="more" type="button" data-learn="Healthy Living tips">Explore topic &rarr;</button></article>
+          <article class="card benefit reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-stetho"/></svg></span><h3>Care Coordination</h3><p>An example area describing how members might get help organizing appointments and follow-up care.</p><button class="more" type="button" data-learn="Care Coordination">Explore topic &rarr;</button></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== COMMUNITY PROGRAMS ===== -->
+    <section id="resources" aria-labelledby="community-title">
+      <div class="container">
+        <div class="banner reveal" id="community-banner">
+          <div>
+            <span class="eyebrow" style="color:#bff0d0">Community Programs</span>
+            <h2 id="community-title">Healthier neighborhoods start together</h2>
+            <p>Our sample community programs show how a health organization can bring education, outreach and wellness events to the people it serves.</p>
+            <a class="btn btn-white" href="#news">See upcoming sample events</a>
+          </div>
+          <div class="banner-stats" aria-label="Sample statistics (illustrative)">
+            <div><strong>00</strong><span>Sample programs</span></div>
+            <div><strong>00</strong><span>Sample events</span></div>
+            <div><strong>00</strong><span>Sample partners</span></div>
+            <div><strong>00</strong><span>Sample volunteers</span></div>
+          </div>
+        </div>
+        <div class="grid-4">
+          <article class="card community-card reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-globe"/></svg></span><h3>Community Health Initiatives</h3><p>Neighborhood projects focused on access, awareness and healthy environments.</p></article>
+          <article class="card community-card reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-doc"/></svg></span><h3>Health Education</h3><p>Workshops and printable guides that explain health topics in clear, everyday language.</p></article>
+          <article class="card community-card reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-users"/></svg></span><h3>Outreach Programs</h3><p>Volunteers and partners connecting residents with information and local resources.</p></article>
+          <article class="card community-card reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-calendar"/></svg></span><h3>Wellness Events</h3><p>Walks, health fairs and family days that make healthy living social and fun.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== NEWS ===== -->
+    <section class="alt" id="news" aria-labelledby="news-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">News &amp; Updates</span>
+          <h2 id="news-title">Health awareness &amp; events <span class="demo-badge">Example content</span></h2>
+          <p>All articles, dates and events below are examples created for this prototype.</p>
+        </div>
+        <div class="grid-3">
+          <article class="news-card reveal">
+            <div class="news-media"><img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=800&q=70" alt="Colorful fresh fruits and vegetables on a table" loading="lazy" onerror="this.style.display='none'"></div>
+            <div class="news-body"><div class="news-meta"><span class="demo-badge">Example</span><time>Sample date: Oct 2026</time></div><h3>Simple ways to build a balanced plate</h3><p>A sample awareness article about everyday nutrition habits for busy families.</p><button class="btn btn-outline btn-sm" type="button" data-learn="this sample article">Read sample</button></div>
+          </article>
+          <article class="news-card reveal">
+            <div class="news-media"><img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=70" alt="Person practicing relaxed breathing outdoors" loading="lazy" onerror="this.style.display='none'"></div>
+            <div class="news-body"><div class="news-meta"><span class="demo-badge">Example</span><time>Sample date: Oct 2026</time></div><h3>Small steps for better sleep and less stress</h3><p>A sample mental wellness article with general, non-clinical tips for winding down.</p><button class="btn btn-outline btn-sm" type="button" data-learn="this sample article">Read sample</button></div>
+          </article>
+          <article class="news-card reveal">
+            <div class="news-media"><img src="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=70" alt="Healthcare worker preparing a vaccine" loading="lazy" onerror="this.style.display='none'"></div>
+            <div class="news-body"><div class="news-meta"><span class="demo-badge">Example</span><time>Sample date: Nov 2026</time></div><h3>Why seasonal checkups matter</h3><p>A sample article encouraging readers to talk with their own clinician about recommended care.</p><button class="btn btn-outline btn-sm" type="button" data-learn="this sample article">Read sample</button></div>
+          </article>
+        </div>
+
+        <h3 style="margin-top:44px">Upcoming community events <span class="demo-badge">Fictional</span></h3>
+        <ul class="event-list">
+          <li class="event reveal"><div class="date"><b>15</b><span>Nov</span></div><div><h3>Family Wellness Walk</h3><p>Sample event &bull; Example Park &bull; Date and place are placeholders</p></div><button class="btn btn-primary btn-sm" type="button" data-learn="this sample event">Details</button></li>
+          <li class="event reveal"><div class="date"><b>02</b><span>Dec</span></div><div><h3>Healthy Cooking Workshop</h3><p>Sample event &bull; Community Center &bull; Date and place are placeholders</p></div><button class="btn btn-primary btn-sm" type="button" data-learn="this sample event">Details</button></li>
+          <li class="event reveal"><div class="date"><b>14</b><span>Jan</span></div><div><h3>Community Health Fair</h3><p>Sample event &bull; Example Hall &bull; Date and place are placeholders</p></div><button class="btn btn-primary btn-sm" type="button" data-learn="this sample event">Details</button></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== ABOUT ===== -->
+    <section id="about" aria-labelledby="about-title">
+      <div class="container">
+        <div class="section-head center reveal">
+          <span class="eyebrow">About Us</span>
+          <h2 id="about-title">About PSU Care</h2>
+          <p>PSU Care is a fictional brand created for this website prototype. Replace this section with your organization&rsquo;s real mission, leadership and approved descriptions.</p>
+        </div>
+        <div class="grid-3">
+          <article class="card reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-heart"/></svg></span><h3>Compassion</h3><p>Sample value: treating every person with dignity, respect and warmth.</p></article>
+          <article class="card reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-globe"/></svg></span><h3>Access</h3><p>Sample value: designing information that is clear, inclusive and easy to find.</p></article>
+          <article class="card reveal"><span class="icon-box"><svg aria-hidden="true"><use href="#i-shield"/></svg></span><h3>Trust</h3><p>Sample value: being transparent about what is real information and what is a demo.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="alt" id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="section-head center reveal">
+          <span class="eyebrow">FAQ</span>
+          <h2 id="faq-title">Frequently asked questions</h2>
+          <p>Generic sample answers for demonstration. They do not promise coverage or eligibility.</p>
+        </div>
+        <div class="faq-list" id="faq-list">
+          <div class="faq-item"><h3 style="margin:0"><button class="faq-q" type="button" aria-expanded="false" aria-controls="fa1" id="fq1">How would membership work?<span class="plus" aria-hidden="true">+</span></button></h3><div class="faq-a" id="fa1" role="region" aria-labelledby="fq1"><div><p>This is a sample answer. In a real health-plan website, this area would explain how people can learn about eligibility and enrollment from official sources. No eligibility is promised here.</p></div></div></div>
+          <div class="faq-item"><h3 style="margin:0"><button class="faq-q" type="button" aria-expanded="false" aria-controls="fa2" id="fq2">Where can I learn about my benefits?<span class="plus" aria-hidden="true">+</span></button></h3><div class="faq-a" id="fa2" role="region" aria-labelledby="fq2"><div><p>Sample answer: A real site would direct members to their official plan documents. This prototype contains no real benefit information, so please do not rely on it for coverage decisions.</p></div></div></div>
+          <div class="faq-item"><h3 style="margin:0"><button class="faq-q" type="button" aria-expanded="false" aria-controls="fa3" id="fq3">How do I find a doctor?<span class="plus" aria-hidden="true">+</span></button></h3><div class="faq-a" id="fa3" role="region" aria-labelledby="fq3"><div><p>Sample answer: Use the Find a Doctor section above to try the search tool. All providers listed are fictional and for demonstration only. A real directory would be connected to verified provider data.</p></div></div></div>
+          <div class="faq-item"><h3 style="margin:0"><button class="faq-q" type="button" aria-expanded="false" aria-controls="fa4" id="fq4">How do I contact support?<span class="plus" aria-hidden="true">+</span></button></h3><div class="faq-a" id="fa4" role="region" aria-labelledby="fq4"><div><p>Sample answer: See the Contact section below for placeholder details. The demonstration form does not send messages anywhere. For urgent medical needs, contact local emergency services.</p></div></div></div>
+          <div class="faq-item"><h3 style="margin:0"><button class="faq-q" type="button" aria-expanded="false" aria-controls="fa5" id="fq5">Is my information safe on this website?<span class="plus" aria-hidden="true">+</span></button></h3><div class="faq-a" id="fa5" role="region" aria-labelledby="fq5"><div><p>This prototype does not collect or transmit data. Please do not enter personal health, financial or identification information into any field.</p></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section id="contact" aria-labelledby="contact-title">
+      <div class="container contact-grid">
+        <div class="reveal">
+          <span class="eyebrow">Contact</span>
+          <h2 id="contact-title" style="font-size:clamp(1.8rem,4vw,2.7rem)">We&rsquo;d love to hear from you</h2>
+          <p style="color:var(--gray-soft)">Use the demonstration form to see how contact validation works. Contact details below are placeholders.</p>
+          <ul class="contact-info">
+            <li><span class="icon-box"><svg aria-hidden="true"><use href="#i-phone"/></svg></span><div><strong>Phone</strong><span>[Placeholder phone number]</span></div></li>
+            <li><span class="icon-box"><svg aria-hidden="true"><use href="#i-mail"/></svg></span><div><strong>Email</strong><span>[placeholder@example.com]</span></div></li>
+            <li><span class="icon-box"><svg aria-hidden="true"><use href="#i-pin"/></svg></span><div><strong>Address</strong><span>[Placeholder street address, City, State]</span></div></li>
+            <li><span class="icon-box"><svg aria-hidden="true"><use href="#i-calendar"/></svg></span><div><strong>Hours</strong><span>[Placeholder business hours]</span></div></li>
+          </ul>
+          <p class="disclaimer" style="margin-top:8px"><strong>Emergency?</strong> This website cannot provide medical help. In an emergency, call your local emergency number.</p>
+        </div>
+
+        <div class="form-card reveal">
+          <form id="contact-form" novalidate aria-label="Demonstration contact form">
+            <p class="form-note">Demonstration only &mdash; messages are <strong>not</strong> sent anywhere. Please do not include medical or personal health information.</p>
+            <div class="form-grid">
+              <div class="field"><label for="c-name">Name</label><input id="c-name" name="name" type="text" autocomplete="name" required aria-describedby="e-name"><div class="err" id="e-name" role="alert"></div></div>
+              <div class="field"><label for="c-email">Email</label><input id="c-email" name="email" type="email" autocomplete="email" required aria-describedby="e-email"><div class="err" id="e-email" role="alert"></div></div>
+              <div class="field full"><label for="c-subject">Subject</label><input id="c-subject" name="subject" type="text" required aria-describedby="e-subject"><div class="err" id="e-subject" role="alert"></div></div>
+              <div class="field full"><label for="c-message">Message</label><textarea id="c-message" name="message" required minlength="10" aria-describedby="e-message"></textarea><div class="err" id="e-message" role="alert"></div></div>
+            </div>
+            <button class="btn btn-primary" type="submit" style="margin-top:8px">Submit (demo)</button>
+            <div class="alert success" id="form-success" role="status">Thank you! Your form passed validation. This is a demonstration, so no message was sent.</div>
+            <div class="alert error" id="form-error" role="alert">Please fix the highlighted fields and try again.</div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="#home" class="logo" aria-label="PSU Care home"><span class="logo-icon" aria-hidden="true"></span><span class="logo-text">PSU <b>Care</b><small>Health &amp; Wellness</small></span></a>
+          <p class="footer-disclaimer">PSU Care is a fictional brand used in a front-end prototype. It is not a real health plan, provider or insurer.</p>
+        </div>
+        <div><h4>Quick Links</h4><ul><li><a href="#home">Home</a></li><li><a href="#plans">Health Plans</a></li><li><a href="#doctors">Find a Doctor</a></li><li><a href="#benefits">Benefits</a></li><li><a href="#about">About Us</a></li></ul></div>
+        <div><h4>Member Resources</h4><ul><li><a href="#members">Member Benefits</a></li><li><a href="#members" data-open-tab="forms">Forms &amp; Documents</a></li><li><a href="#faq">FAQ</a></li><li><a href="#resources">Community Programs</a></li><li><a href="#news">News &amp; Events</a></li></ul></div>
+        <div><h4>Contact</h4><ul><li>[Placeholder phone]</li><li>[placeholder@example.com]</li><li>[Placeholder address]</li><li><a href="#contact">Contact form</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="year">2026</span> PSU Care. All rights reserved. Prototype website.</span>
+        <nav aria-label="Legal">
+          <a href="#" data-learn="the Privacy Policy">Privacy Policy</a>
+          <a href="#" data-learn="the Terms of Use">Terms of Use</a>
+          <a href="#" data-learn="the Accessibility statement">Accessibility</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <button class="to-top" id="to-top" type="button" aria-label="Back to top"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ===================================================================
+       DATA — replace with real, verified content before any real use
+       =================================================================== */
+    // Fictional demonstration providers. None are real people or organizations.
+    const PROVIDERS = [
+      { name: "Dr. Alex Morgan",   spec: "Family Medicine", loc: "Springfield", lang: "English, Spanish", accepting: true,  note: "Sample profile" },
+      { name: "Dr. Priya Rivera",  spec: "Pediatrics",      loc: "Riverside",   lang: "English, Hindi",   accepting: true,  note: "Sample profile" },
+      { name: "Dr. Samuel Okafor", spec: "Cardiology",      loc: "Lakeview",    lang: "English",          accepting: false, note: "Sample profile" },
+      { name: "Dr. Mei Tanaka",    spec: "Dermatology",     loc: "Springfield", lang: "English, Japanese",accepting: true,  note: "Sample profile" },
+      { name: "Dr. Daniel Brooks", spec: "Internal Medicine",loc: "Riverside",  lang: "English",          accepting: true,  note: "Sample profile" },
+      { name: "Dr. Lucia Fernandez",spec:"Women's Health",  loc: "Lakeview",    lang: "English, Spanish", accepting: true,  note: "Sample profile" },
+      { name: "Dr. Omar Haddad",   spec: "Behavioral Health",loc: "Springfield",lang: "English, Arabic",  accepting: true,  note: "Sample profile" },
+      { name: "Dr. Hannah Lee",    spec: "Pediatrics",      loc: "Lakeview",    lang: "English, Korean",  accepting: false, note: "Sample profile" },
+      { name: "Dr. Marcus Reed",   spec: "Orthopedics",     loc: "Riverside",   lang: "English",          accepting: true,  note: "Sample profile" },
+      { name: "Dr. Elena Petrova", spec: "Family Medicine", loc: "Lakeview",    lang: "English, Russian", accepting: true,  note: "Sample profile" }
+    ];
+
+    // Member resource panels (all sample content)
+    const RESOURCES = {
+      benefits: {
+        title: "Member Benefits (sample)",
+        body: `<p>This panel shows how benefit highlights could be summarized. The items below are <strong>generic examples</strong>, not real coverage.</p>
+          <ul class="check"><li>Example: annual wellness visit information</li><li>Example: preventive screening reminders</li><li>Example: care coordination support</li><li>Example: health education library</li></ul>
+          <p class="disclaimer" style="margin:0">Always check official plan documents for real benefit details.</p>`
+      },
+      account: {
+        title: "Member Account Access (demo)",
+        body: `<p>A real health plan would provide secure sign-in here. This prototype <strong>does not include a login</strong> and does not collect any account or personal information.</p>
+          <ul class="check"><li>Sample feature: view plan summary</li><li>Sample feature: update contact preferences</li><li>Sample feature: message the support team</li></ul>
+          <button class="btn btn-primary" type="button" disabled aria-disabled="true" style="opacity:.55;cursor:not-allowed">Sign in (not available in demo)</button>`
+      },
+      forms: {
+        title: "Forms & Documents (sample list)",
+        body: `<p>Example document titles show how a downloadable library might look. These are not real files.</p>
+          <ul class="doc-list">
+            <li><span class="name">Sample Member Handbook</span><button class="btn btn-outline btn-sm" type="button" data-learn="this sample document">Preview (demo)</button></li>
+            <li><span class="name">Sample Preventive Care Checklist</span><button class="btn btn-outline btn-sm" type="button" data-learn="this sample document">Preview (demo)</button></li>
+            <li><span class="name">Sample Contact Preferences Form</span><button class="btn btn-outline btn-sm" type="button" data-learn="this sample document">Preview (demo)</button></li>
+          </ul>`
+      },
+      faq: {
+        title: "Common Questions (sample)",
+        body: `<p>Quick topics members might look for. See the full <a href="#faq">FAQ section</a> for expandable answers.</p>
+          <ul class="check"><li>How do I learn about membership?</li><li>Where can I find benefit information?</li><li>How do I search for a doctor?</li><li>How can I reach support?</li></ul>
+          <a class="btn btn-primary" href="#faq">Go to FAQ</a>`
+      },
+      wellness: {
+        title: "Health & Wellness Resources (sample)",
+        body: `<p>General healthy-living topics offered as educational examples, not medical advice.</p>
+          <ul class="check"><li>Staying active in everyday life</li><li>Building balanced meals</li><li>Stress and sleep basics</li><li>Preparing questions for your next doctor visit</li></ul>
+          <a class="btn btn-primary" href="#benefits">Browse wellness topics</a>`
+      }
+    };
+
+    /* ===================================================================
+       HELPERS
+       =================================================================== */
+    const $  = (s, c = document) => c.querySelector(s);
+    const $$ = (s, c = document) => [...c.querySelectorAll(s)];
+    const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    let toastTimer;
+    function toast(msg) {
+      const t = $("#toast");
+      t.textContent = msg; t.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 3600);
+    }
+
+    /* ===================================================================
+       HEADER / MOBILE NAV
+       =================================================================== */
+    const menuBtn = $("#menu-toggle"), nav = $("#primary-nav"), header = $("#site-header");
+    function setMenu(open) {
+      nav.classList.toggle("open", open);
+      menuBtn.setAttribute("aria-expanded", String(open));
+      menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      document.body.classList.toggle("menu-open", open);
+    }
+    menuBtn.addEventListener("click", () => setMenu(!nav.classList.contains("open")));
+    $$("a", nav).forEach(a => a.addEventListener("click", () => setMenu(false)));
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && nav.classList.contains("open")) { setMenu(false); menuBtn.focus(); } });
+    window.matchMedia("(min-width: 961px)").addEventListener("change", e => { if (e.matches) setMenu(false); });
+
+    const toTop = $("#to-top");
+    window.addEventListener("scroll", () => {
+      header.classList.toggle("scrolled", window.scrollY > 10);
+      toTop.classList.toggle("show", window.scrollY > 700);
+    }, { passive: true });
+    toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+    // Highlight active nav link based on visible section. "Resources" maps to the community section; "Members" to members.
+    const sectionToLink = { home: "#home", plans: "#plans", members: "#members", doctors: "#doctors", benefits: "#benefits", resources: "#resources", about: "#about", contact: "#contact" };
+    const links = $$(".nav-link");
+    const spy = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting && sectionToLink[en.target.id]) {
+          links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === sectionToLink[en.target.id]));
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    Object.keys(sectionToLink).forEach(id => { const el = document.getElementById(id); if (el) spy.observe(el); });
+
+    /* Smooth scroll fallback + focus management for in-page links (CSS handles scroll-behavior) */
+    $$('a[href^="#"]').forEach(a => a.addEventListener("click", e => {
+      const id = a.getAttribute("href");
+      if (id.length < 2) { e.preventDefault(); return; }
+      const target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      history.replaceState(null, "", id);
+    }));
+
+    /* "Learn more" demo buttons (plans, topics, events, legal links) */
+    document.addEventListener("click", e => {
+      const el = e.target.closest("[data-learn]");
+      if (!el) return;
+      e.preventDefault();
+      toast(`Demo only: the page for ${el.dataset.learn.replace(/&amp;/g, "&")} is not part of this prototype.`);
+    });
+
+    /* ===================================================================
+       MEMBER RESOURCE TABS (with arrow-key support)
+       =================================================================== */
+    const tabs = $$("#res-tabs .res-tile"), panel = $("#res-panel");
+    function showTab(key, focus) {
+      tabs.forEach(t => {
+        const on = t.dataset.key === key;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on) { panel.setAttribute("aria-labelledby", t.id); if (focus) t.focus(); }
+      });
+      const r = RESOURCES[key];
+      panel.innerHTML = `<h3>${esc(r.title)}</h3>${r.body}`;
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => showTab(t.dataset.key));
+      t.addEventListener("keydown", e => {
+        let n = null;
+        if (e.key === "ArrowRight" || e.key === "ArrowDown") n = (i + 1) % tabs.length;
+        if (e.key === "ArrowLeft"  || e.key === "ArrowUp")   n = (i - 1 + tabs.length) % tabs.length;
+        if (e.key === "Home") n = 0;
+        if (e.key === "End")  n = tabs.length - 1;
+        if (n !== null) { e.preventDefault(); showTab(tabs[n].dataset.key, true); }
+      });
+    });
+    $$("[data-open-tab]").forEach(a => a.addEventListener("click", () => showTab(a.dataset.openTab)));
+    showTab("benefits");
+
+    /* ===================================================================
+       FIND A DOCTOR — search + filters (fictional data)
+       =================================================================== */
+    const qEl = $("#doc-q"), specEl = $("#doc-spec"), locEl = $("#doc-loc"), grid = $("#doc-grid"), count = $("#doc-count");
+    [...new Set(PROVIDERS.map(p => p.spec))].sort().forEach(s => specEl.add(new Option(s, s)));
+    [...new Set(PROVIDERS.map(p => p.loc))].sort().forEach(l => locEl.add(new Option(l, l)));
+
+    function initials(name) { return name.replace(/^Dr\.\s*/, "").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase(); }
+
+    function renderDoctors() {
+      const q = qEl.value.trim().toLowerCase(), spec = specEl.value, loc = locEl.value;
+      const list = PROVIDERS.filter(p =>
+        (!spec || p.spec === spec) && (!loc || p.loc === loc) &&
+        (!q || `${p.name} ${p.spec} ${p.loc} ${p.lang}`.toLowerCase().includes(q))
+      );
+      count.textContent = list.length ? `Showing ${list.length} of ${PROVIDERS.length} fictional demonstration providers` : "0 demonstration providers match your search";
+      grid.innerHTML = list.length ? list.map(p => `
+        <article class="doc-card">
+          <div class="doc-top"><span class="avatar" aria-hidden="true">${esc(initials(p.name))}</span><div><h3>${esc(p.name)}</h3><span class="spec">${esc(p.spec)}</span></div></div>
+          <div class="tags"><span class="demo-badge">Fictional demo provider</span></div>
+          <dl>
+            <div><dt>Location</dt><dd>${esc(p.loc)} (sample)</dd></div>
+            <div><dt>Languages</dt><dd>${esc(p.lang)}</dd></div>
+            <div><dt>Status</dt><dd>${p.accepting ? "Sample: accepting new patients" : "Sample: not accepting new patients"}</dd></div>
+          </dl>
+          <button class="btn btn-outline btn-sm" type="button" data-learn="this demonstration provider">View profile (demo)</button>
+        </article>`).join("")
+        : `<div class="no-results"><h3>No matching demonstration providers</h3><p style="margin:0">Try a different name, specialty or location, or reset the filters.</p></div>`;
+    }
+    $("#doc-form").addEventListener("submit", e => { e.preventDefault(); renderDoctors(); });
+    qEl.addEventListener("input", renderDoctors);
+    specEl.addEventListener("change", renderDoctors);
+    locEl.addEventListener("change", renderDoctors);
+    $("#doc-reset").addEventListener("click", () => { qEl.value = ""; specEl.value = ""; locEl.value = ""; renderDoctors(); qEl.focus(); });
+    renderDoctors();
+
+    /* ===================================================================
+       FAQ ACCORDION
+       =================================================================== */
+    $$(".faq-q").forEach(btn => btn.addEventListener("click", () => {
+      const open = btn.getAttribute("aria-expanded") === "true";
+      $$(".faq-q").forEach(b => b.setAttribute("aria-expanded", "false"));
+      btn.setAttribute("aria-expanded", String(!open));
+    }));
+
+    /* ===================================================================
+       CONTACT FORM — client-side validation only (nothing is sent)
+       =================================================================== */
+    const form = $("#contact-form"), okBox = $("#form-success"), errBox = $("#form-error");
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const rules = {
+      name:    v => v.trim().length >= 2 ? "" : "Please enter your name (at least 2 characters).",
+      email:   v => emailRe.test(v.trim()) ? "" : "Please enter a valid email address.",
+      subject: v => v.trim().length >= 3 ? "" : "Please enter a subject (at least 3 characters).",
+      message: v => v.trim().length >= 10 ? "" : "Please enter a message (at least 10 characters)."
+    };
+    function validateField(name) {
+      const input = form.elements[name], msg = rules[name](input.value);
+      $("#e-" + name).textContent = msg;
+      input.setAttribute("aria-invalid", msg ? "true" : "false");
+      return !msg;
+    }
+    Object.keys(rules).forEach(n => form.elements[n].addEventListener("blur", () => validateField(n)));
+    Object.keys(rules).forEach(n => form.elements[n].addEventListener("input", () => { if (form.elements[n].getAttribute("aria-invalid") === "true") validateField(n); }));
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      okBox.classList.remove("show"); errBox.classList.remove("show");
+      const results = Object.keys(rules).map(validateField);
+      if (results.every(Boolean)) {
+        okBox.classList.add("show");
+        form.reset();
+        Object.keys(rules).forEach(n => form.elements[n].setAttribute("aria-invalid", "false"));
+      } else {
+        errBox.classList.add("show");
+        const firstBad = Object.keys(rules).find(n => form.elements[n].getAttribute("aria-invalid") === "true");
+        if (firstBad) form.elements[firstBad].focus();
+      }
+    });
+
+    /* ===================================================================
+       MISC: year + scroll reveal
+       =================================================================== */
+    $("#year").textContent = new Date().getFullYear();
+    const revealObs = new IntersectionObserver((entries, obs) => {
+      entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add("visible"); obs.unobserve(en.target); } });
+    }, { threshold: .12 });
+    $$(".reveal").forEach(el => revealObs.observe(el));
+    // Community banner background image (replaceable)
+    $("#community-banner").style.setProperty("--banner-img", "url('https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1400&q=70')");
+  </script>
+</body>
+</html>
